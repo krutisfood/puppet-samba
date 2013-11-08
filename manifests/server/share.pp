@@ -4,8 +4,8 @@ define samba::server::share($ensure = present,
                             $copy = '',
                             $create_mask = '',
                             $directory_mask = '',
-                            $force_create_mask = '',
-                            $force_directory_mask = '',
+                            $force_create_mode = '',
+                            $force_directory_mode = '',
                             $force_group = '',
                             $force_user = '',
                             $guest_account = '',
@@ -15,7 +15,10 @@ define samba::server::share($ensure = present,
                             $read_only = '',
                             $public = '',
                             $writable = '',
-                            $printable = '') {
+                            $printable = '',
+                            $wide_links = '',
+                            $follow_symlinks = '',
+                            $valid_users = '') {
 
   $context = $samba::server::context
   $target = "target[. = '${name}']"
@@ -30,7 +33,7 @@ define samba::server::share($ensure = present,
     notify  => Class['samba::server::service']
   }
 
-  if $ensure == 'present' {
+  if $ensure == present {
     augeas { "${name}-browsable":
       context => $context,
       changes => $browsable ? {
@@ -82,21 +85,21 @@ define samba::server::share($ensure = present,
       notify  => Class['samba::server::service']
     }
 
-    augeas { "${name}-force_create_mask":
+    augeas { "${name}-force_create_mode":
       context => $context,
-      changes => $force_create_mask ? {
-        default => "set \"${target}/force create mask\" '${force_create_mask}'",
-        ''      => "rm \"${target}/force create mask\"",
+      changes => $force_create_mode ? {
+        default => "set \"${target}/force create mode\" '${force_create_mode}'",
+        ''      => "rm \"${target}/force create mode\"",
       },
       require => Augeas["${name}-section"],
       notify  => Class['samba::server::service']
     }
 
-    augeas { "${name}-force_directory_mask":
+    augeas { "${name}-force_directory_mode":
       context => $context,
-      changes => $force_directory_mask ? {
-        default => "set \"${target}/force directory mask\" '${force_directory_mask}'",
-        ''      => "rm \"${target}/force directory mask\"",
+      changes => $force_directory_mode ? {
+        default => "set \"${target}/force directory mode\" '${force_directory_mode}'",
+        ''      => "rm \"${target}/force directory mode\"",
       },
       require => Augeas["${name}-section"],
       notify  => Class['samba::server::service']
@@ -207,5 +210,38 @@ define samba::server::share($ensure = present,
       require => Augeas["${name}-section"],
       notify  => Class['samba::server::service']
     }
+
+    augeas { "${name}-wide-links":
+      context => $context,
+      changes => $wide_links ? {
+        true    => "set \"${target}/wide links\" yes",
+        false   => "set \"${target}/wide links\" no",
+        default => "rm \"${target}/wide links\"",
+      },
+      require => Augeas["${name}-section"],
+      notify  => Class['samba::server::service']
+    }
+
+    augeas { "${name}-follow-symlinks":
+      context => $context,
+      changes => $follow_symlinks ? {
+        true    => "set \"${target}/follow symlinks\" yes",
+        false   => "set \"${target}/follow symlinks\" no",
+        default => "rm \"${target}/follow symlinks\"",
+      },
+      require => Augeas["${name}-section"],
+      notify  => Class['samba::server::service']
+    }
+
+    augeas { "${name}-valid-users":
+      context => $context,
+      changes => $valid_users ? {
+        default => "set \"${target}/valid users\" '${valid_users}'",
+        ''      => "rm \"${target}/valid users\"",
+      },
+      require => Augeas["${name}-section"],
+      notify  => Class['samba::server::service']
+    }
   }
 }
+
